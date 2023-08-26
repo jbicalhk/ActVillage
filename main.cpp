@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 
 	if (map.load("assets/demo.tmx")) {
 
-		MapLayer layerZero(map, 0);
+		MapLayer chao(map, 0);
 		MapLayer layerOne(map, 1);
 		MapLayer layerTwo(map, 2);
 		MapLayer layerThree(map, 3);
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 			}
 
 			window.clear(sf::Color::Black);
-			window.draw(layerZero);
+			window.draw(chao);
 			window.draw(layerOne);
 			window.draw(layerTwo);
 			window.draw(layerThree);
