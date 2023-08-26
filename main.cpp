@@ -9,6 +9,9 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
+	sf::View cameraView(sf::FloatRect(0,0,130,110));
+	window.setView(cameraView);
+
 	cout << "1" << endl;
 	tmx::Map map;
 
