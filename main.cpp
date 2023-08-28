@@ -1,7 +1,9 @@
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics.hpp>
 #include <SFML/Window/Event.hpp>
 #include <iostream>
 #include <tmxlite/Map.hpp>
+#include "player.hpp"
 
 using namespace std;
 
@@ -9,8 +11,33 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
-	sf::View cameraView(sf::FloatRect(0,0,130,110));
-	window.setView(cameraView);
+	//sf::View cameraView(sf::FloatRect(0,0,130,110));
+
+	//hitbox
+	sf::RectangleShape hitbox(sf::Vector2f(800.f, 25.f));
+	hitbox.setFillColor(sf::Color::White);
+	hitbox.setPosition(0, 55);
+
+
+	std::vector<std::vector<sf::Texture>> playerTextures(4); // 0: Front, 1: Back, 2: Left, 3: Right
+	    std::string directions[] = { "front", "back", "left", "right" };
+
+	    for (int dir = 0; dir < 4; ++dir)
+	    {
+	        for (int i = 0; i <= 5; ++i)
+	        {
+	            sf::Texture texture;
+	            if (!texture.loadFromFile("assets/" + directions[dir] + "/sprite_player_walking_" + directions[dir] + "_" + std::to_string(i) + ".png")) {
+	                return 1;
+	            }
+	            playerTextures[dir].push_back(texture);
+	        }
+	    }
+
+	    Player player(playerTextures, 200.0f);
+	    Camera camera(window, player);
+	    float playerSpeed = 200.0f;
+	    sf::Clock clock1;
 
 	cout << "1" << endl;
 	tmx::Map map;
@@ -20,7 +47,14 @@ int main(int argc, char **argv) {
 		MapLayer chao(map, 0);
 		MapLayer layerOne(map, 1);
 		MapLayer layerTwo(map, 2);
-		MapLayer layerThree(map, 3);
+		MapLayer Fase1_casinhas(map, 3);
+		MapLayer Fase2_casinhas(map, 4);
+		MapLayer Fase3_comercio(map, 5);
+		MapLayer Fase4_terraCastelo(map, 6);
+		MapLayer Fase5_castelo1(map, 7);
+		MapLayer Fase6_castelo2(map, 8);
+		MapLayer Fase7_decoracaoExtra(map, 9);
+		MapLayer Fase8_final(map, 10);
 
 		sf::Clock globalClock;
 		while (window.isOpen()) {
@@ -30,11 +64,60 @@ int main(int argc, char **argv) {
 					window.close();
 			}
 
+			//teste do personagem
+			float deltaTime = clock1.restart().asSeconds();
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			        {
+			            player.startMoving(2);
+			            player.move(-playerSpeed * deltaTime, 0.0f);
+			        }
+
+			        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			        {
+			            player.startMoving(3);
+			            player.move(playerSpeed * deltaTime, 0.0f);
+			        }
+
+			        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			        {
+			            player.startMoving(1);
+			            player.move(0.0f, -playerSpeed * deltaTime);
+			        }
+
+			        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			        {
+			            player.startMoving(0);
+			            player.move(0.0f, playerSpeed * deltaTime);
+			        }
+
+			        else
+			        {
+			            player.stopMoving();
+			        }
+
+			player.update(deltaTime);
+			camera.update();
+
+			//atualizar visao do jogador
+			//cameraView.setCenter(player.getPosition());
+
 			window.clear(sf::Color::Black);
+			window.setView(camera.getView());
 			window.draw(chao);
 			window.draw(layerOne);
 			window.draw(layerTwo);
-			window.draw(layerThree);
+			window.draw(Fase1_casinhas);
+			window.draw(Fase2_casinhas);
+			window.draw(Fase3_comercio);
+			window.draw(Fase4_terraCastelo);
+			window.draw(Fase5_castelo1);
+			window.draw(Fase6_castelo2);
+			window.draw(Fase7_decoracaoExtra);
+			window.draw(Fase8_final);
+
+			window.draw(player.getSprite());
+			window.draw(hitbox);
 			window.display();
 		}
 
