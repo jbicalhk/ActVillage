@@ -13,10 +13,23 @@ int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 	//sf::View cameraView(sf::FloatRect(0,0,130,110));
 
-	//hitbox
-	sf::RectangleShape hitbox(sf::Vector2f(800.f, 25.f));
-	hitbox.setFillColor(sf::Color::White);
+	//hitbox superior
+	sf::RectangleShape hitbox(sf::Vector2f(1120.f, 25.f));
+	hitbox.setFillColor(sf::Color::Transparent);
 	hitbox.setPosition(0, 55);
+	//hitbox esquerda
+	sf::RectangleShape hitbox2(sf::Vector2f(25.f, 905.f));
+		hitbox2.setFillColor(sf::Color::Transparent);
+		hitbox2.setPosition(145, 55);
+	//hitbox direita
+		sf::RectangleShape hitbox3(sf::Vector2f(25.f, 905.f));
+		hitbox3.setFillColor(sf::Color::Transparent);
+		hitbox3.setPosition(960, 55);
+	//hitbox inferior
+		sf::RectangleShape hitbox4(sf::Vector2f(1120.f, 25.f));
+		hitbox4.setFillColor(sf::Color::Transparent);
+		hitbox4.setPosition(0, 870);
+
 
 
 	std::vector<std::vector<sf::Texture>> playerTextures(4); // 0: Front, 1: Back, 2: Left, 3: Right
@@ -99,6 +112,20 @@ int main(int argc, char **argv) {
 			player.update(deltaTime);
 			camera.update();
 
+			if(hitbox.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
+				player.getSprite().move(0, playerSpeed * deltaTime);
+			}
+			if(hitbox2.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
+				player.getSprite().move(playerSpeed * deltaTime,0);
+			}
+			if(hitbox3.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
+				player.getSprite().move(-playerSpeed * deltaTime,0);
+			}
+			if(hitbox4.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
+				player.getSprite().move(0, -playerSpeed * deltaTime);
+			}
+
+
 			//atualizar visao do jogador
 			//cameraView.setCenter(player.getPosition());
 
@@ -115,9 +142,11 @@ int main(int argc, char **argv) {
 			window.draw(Fase6_castelo2);
 			window.draw(Fase7_decoracaoExtra);
 			window.draw(Fase8_final);
-
 			window.draw(player.getSprite());
 			window.draw(hitbox);
+			window.draw(hitbox2);
+			window.draw(hitbox3);
+			window.draw(hitbox4);
 			window.display();
 		}
 
