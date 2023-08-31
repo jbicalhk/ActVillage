@@ -13,6 +13,17 @@ using namespace std;
 int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 	//sf::View cameraView(sf::FloatRect(0,0,130,110));
+	int number= 0;
+	bool fase1Unlocked = false;
+	bool fase2Unlocked = false;
+	bool fase3Unlocked = false;
+	bool fase4Unlocked = false;
+	bool fase5Unlocked = false;
+	bool fase6Unlocked = false;
+	bool fase7Unlocked = false;
+	bool fase8Unlocked = false;
+//	std::cout << "digite um numero";
+//	std::cin >> number;
 
 	//hitbox superior
 	sf::RectangleShape hitbox(sf::Vector2f(1120.f, 25.f));
@@ -49,17 +60,14 @@ int main(int argc, char **argv) {
 	        }
 	    }
 
-	    Player player(playerTextures, 200.0f);
+	    Player player(playerTextures, 170.0f);
 	    Camera camera(window, player);
-	    float playerSpeed = 200.0f;
-	    sf::Clock clock1;
+	    float playerSpeed = 170.0f;
+	    sf::Clock clock1, clock2;
 
 
 	cout << "1" << endl;
 	tmx::Map map;
-
-	tmx::ObjectGroup colision;
-	colision.getType();
 
 	if (map.load("assets/demo.tmx")) {
 
@@ -83,8 +91,12 @@ int main(int argc, char **argv) {
 					window.close();
 			}
 
+
+
 			//teste do personagem
 			float deltaTime = clock1.restart().asSeconds();
+			sf::Time Temp;
+			Temp = clock2.getElapsedTime();
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			        {
@@ -135,19 +147,60 @@ int main(int argc, char **argv) {
 			//atualizar visao do jogador
 			//cameraView.setCenter(player.getPosition());
 
+			// Verifica se 30 segundos se passaram
+			if (Temp.asSeconds() >= 10) {
+				Temp = sf::Time::Zero;
+				clock2.restart();
+				number++; // Incrementa a variável
+			}
+			if (number >= 1) {
+				fase1Unlocked = true;
+			}
+			if (number >= 2) {
+				fase2Unlocked = true;
+			}
+			if (number >= 3) {
+				fase3Unlocked = true;
+			}
+			if (number >= 4) {
+				fase4Unlocked = true;
+			}
+			if (number >= 5) {
+				fase5Unlocked = true;
+			}
+			if (number >= 6) {
+				fase6Unlocked = true;
+			}
+
+			if (number >= 7) {
+				fase7Unlocked = true;
+			}
+			if (number >= 8) {
+				fase8Unlocked = true;
+			}
+
 			window.clear(sf::Color::Black);
 			window.setView(camera.getView());
 			window.draw(chao);
 			window.draw(layerOne);
 			window.draw(layerTwo);
+
+			if(fase1Unlocked)
 			window.draw(Fase1_casinhas);
+			if(fase2Unlocked)
 			window.draw(Fase2_casinhas);
+			if(fase3Unlocked)
 			window.draw(Fase3_comercio);
+			if(fase4Unlocked){
 			window.draw(Fase4_terraCastelo);
 			window.draw(Fase5_castelo1);
 			window.draw(Fase6_castelo2);
+			}
+			if(fase5Unlocked)
 			window.draw(Fase7_decoracaoExtra);
+			if(fase6Unlocked)
 			window.draw(Fase8_final);
+
 			window.draw(player.getSprite());
 			window.draw(hitbox);
 			window.draw(hitbox2);
