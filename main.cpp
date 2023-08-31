@@ -4,6 +4,7 @@
 #include <iostream>
 #include <tmxlite/Map.hpp>
 #include "player.hpp"
+#include <tmxlite/Object.hpp>
 
 using namespace std;
 
@@ -32,6 +33,7 @@ int main(int argc, char **argv) {
 
 
 
+
 	std::vector<std::vector<sf::Texture>> playerTextures(4); // 0: Front, 1: Back, 2: Left, 3: Right
 	    std::string directions[] = { "front", "back", "left", "right" };
 
@@ -52,8 +54,12 @@ int main(int argc, char **argv) {
 	    float playerSpeed = 200.0f;
 	    sf::Clock clock1;
 
+
 	cout << "1" << endl;
 	tmx::Map map;
+
+	tmx::ObjectGroup colision;
+	colision.getType();
 
 	if (map.load("assets/demo.tmx")) {
 

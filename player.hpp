@@ -3,12 +3,10 @@
 #include <vector>
 #include <string>
 
-class Player
+class Character
 {
-private:
-    std::vector<std::vector<sf::Texture>> playerTextures;
+protected:
     sf::Sprite sprite;
-    int currentFrame = 0;
     int currentDirection = 0; // 0: Front, 1: Back, 2: Left, 3: Right
     bool isMoving;
     float speed;
@@ -16,14 +14,54 @@ private:
     float animationDuration = 0.2f;
 
 public:
-    Player(const std::vector<std::vector<sf::Texture>>& textures, float speed): playerTextures(textures), speed(speed), isMoving(false)
+    Character(const sf::Texture& texture, float speed)
+        : speed(speed), isMoving(false)
     {
-        sprite.setTexture(playerTextures[0][0]);
+        sprite.setTexture(texture);
         sprite.setScale(0.8f, 0.8f);
+    }
+
+    virtual void update(float deltaTime)
+    {
+        // Common logic for character animation
+    }
+
+    virtual void move(float dx, float dy)
+    {
+        sprite.move(dx, dy);
+    }
+
+    virtual void startMoving(int direction)
+    {
+        currentDirection = direction;
+        isMoving = true;
+    }
+
+    virtual void stopMoving()
+    {
+        isMoving = false;
+    }
+
+    sf::Sprite& getSprite()
+    {
+        return sprite;
+    }
+};
+
+class Player : public Character
+{
+private:
+    std::vector<std::vector<sf::Texture>> playerTextures;
+    int currentFrame = 0;
+
+public:
+    Player(const std::vector<std::vector<sf::Texture>>& textures, float speed)
+        : Character(textures[0][0], speed), playerTextures(textures)
+    {
         sprite.setPosition(400.0f - sprite.getGlobalBounds().width / 2.0f, 300.0f - sprite.getGlobalBounds().height / 2.0f);
     }
 
-    void update(float deltaTime)
+    void update(float deltaTime) override
     {
         if (isMoving)
         {
@@ -35,28 +73,8 @@ public:
             sprite.setTexture(playerTextures[currentDirection][currentFrame]);
         }
     }
-
-    void move(float dx, float dy)
-    {
-        sprite.move(dx, dy);
-    }
-
-    void startMoving(int direction)
-    {
-        currentDirection = direction;
-        isMoving = true;
-    }
-
-    void stopMoving()
-    {
-        isMoving = false;
-    }
-
-    sf::Sprite& getSprite()
-    {
-        return sprite;
-    }
 };
+
 
 class Camera
 {
