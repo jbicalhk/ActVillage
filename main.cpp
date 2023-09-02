@@ -76,9 +76,8 @@ int main(int argc, char **argv) {
 	Enemy* enemy = new Enemy(enemyTextures, 150.0f, 50);
 	enemy->getSprite().setPosition(200.0f, 200.0f);
 
-	Enemy* enemy2 = new Enemy(enemyTextures, 90.0f, 50);
-
-	enemy2->getSprite().setPosition(100.0f, 100.0f);
+	//Enemy* enemy2 = new Enemy(enemyTextures, 90.0f, 50);
+	//enemy2->getSprite().setPosition(100.0f, 100.0f);
 
 
 	cout << "1" << endl;
@@ -141,9 +140,9 @@ int main(int argc, char **argv) {
 			        {
 			            player.stopMoving();
 			        }
-
+			std::cout << enemy->getHealth() << endl;
 			if (enemy && sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-				enemy->decreaseHealth(50);
+				enemy->decreaseHealth(10);
 
 			sf::Vector2f playerPosition = player.getSprite().getPosition();
 			player.update(deltaTime);
@@ -151,14 +150,9 @@ int main(int argc, char **argv) {
 
 			enemy->update(deltaTime, playerPosition);
 			if (enemy->getHealth() <= 0) {
-				delete enemy;
-				//enemy = nullptr;
-			}
-
-			enemy2->update(deltaTime, playerPosition);
-			if (enemy->getHealth() <= 0) {
-				delete enemy2;
 				enemy = nullptr;
+				delete enemy;
+
 			}
 
 			if(hitbox.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
@@ -183,6 +177,8 @@ int main(int argc, char **argv) {
 				Temp = sf::Time::Zero;
 				clock2.restart();
 				number++; // Incrementa a variável
+
+
 			}
 			if (number >= 1) {
 				fase1Unlocked = true;
@@ -235,7 +231,6 @@ int main(int argc, char **argv) {
 			window.draw(hitbox3);
 			window.draw(hitbox4);
 			window.draw(enemy->getSprite());
-			window.draw(enemy2->getSprite());
 			window.display();
 		}
 
