@@ -20,8 +20,6 @@ int main(int argc, char **argv) {
 	bool fase4Unlocked = false;
 	bool fase5Unlocked = false;
 	bool fase6Unlocked = false;
-	bool fase7Unlocked = false;
-	bool fase8Unlocked = false;
 //	std::cout << "digite um numero";
 //	std::cin >> number;
 
@@ -43,8 +41,6 @@ int main(int argc, char **argv) {
 		hitbox4.setPosition(0, 870);
 
 
-
-
 	std::vector<std::vector<sf::Texture>> playerTextures(4); // 0: Front, 1: Back, 2: Left, 3: Right
 	    std::string directions[] = { "front", "back", "left", "right" };
 
@@ -62,8 +58,27 @@ int main(int argc, char **argv) {
 
 	    Player player(playerTextures, 170.0f);
 	    Camera camera(window, player);
-	    float playerSpeed = 170.0f;
-	    sf::Clock clock1, clock2;
+
+	float playerSpeed = 170.0f;
+	sf::Clock clock1, clock2;
+
+	std::vector<sf::Texture> enemyTextures;
+	sf::Texture Enemytexture;
+	for (int i = 0; i <= 5; ++i) {
+		sf::Texture texture;
+		if (!Enemytexture.loadFromFile(
+				"assets/sprite_spider_walking_" + std::to_string(i) + ".png")) {
+			return 1;
+		}
+		enemyTextures.push_back(Enemytexture);
+	}
+	//Enemy enemy(enemyTextures, 100.0f, 50);
+	Enemy* enemy = new Enemy(enemyTextures, 150.0f, 50);
+	enemy->getSprite().setPosition(200.0f, 200.0f);
+
+	Enemy* enemy2 = new Enemy(enemyTextures, 90.0f, 50);
+
+	enemy2->getSprite().setPosition(100.0f, 100.0f);
 
 
 	cout << "1" << endl;
@@ -127,8 +142,24 @@ int main(int argc, char **argv) {
 			            player.stopMoving();
 			        }
 
+			if (enemy && sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+				enemy->decreaseHealth(50);
+
+			sf::Vector2f playerPosition = player.getSprite().getPosition();
 			player.update(deltaTime);
 			camera.update();
+
+			enemy->update(deltaTime, playerPosition);
+			if (enemy->getHealth() <= 0) {
+				delete enemy;
+				//enemy = nullptr;
+			}
+
+			enemy2->update(deltaTime, playerPosition);
+			if (enemy->getHealth() <= 0) {
+				delete enemy2;
+				enemy = nullptr;
+			}
 
 			if(hitbox.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
 				player.getSprite().move(0, playerSpeed * deltaTime);
@@ -172,13 +203,6 @@ int main(int argc, char **argv) {
 				fase6Unlocked = true;
 			}
 
-			if (number >= 7) {
-				fase7Unlocked = true;
-			}
-			if (number >= 8) {
-				fase8Unlocked = true;
-			}
-
 			window.clear(sf::Color::Black);
 			window.setView(camera.getView());
 			window.draw(chao);
@@ -187,10 +211,13 @@ int main(int argc, char **argv) {
 
 			if(fase1Unlocked)
 			window.draw(Fase1_casinhas);
+
 			if(fase2Unlocked)
 			window.draw(Fase2_casinhas);
+
 			if(fase3Unlocked)
 			window.draw(Fase3_comercio);
+
 			if(fase4Unlocked){
 			window.draw(Fase4_terraCastelo);
 			window.draw(Fase5_castelo1);
@@ -198,6 +225,7 @@ int main(int argc, char **argv) {
 			}
 			if(fase5Unlocked)
 			window.draw(Fase7_decoracaoExtra);
+
 			if(fase6Unlocked)
 			window.draw(Fase8_final);
 
@@ -206,6 +234,8 @@ int main(int argc, char **argv) {
 			window.draw(hitbox2);
 			window.draw(hitbox3);
 			window.draw(hitbox4);
+			window.draw(enemy->getSprite());
+			window.draw(enemy2->getSprite());
 			window.display();
 		}
 

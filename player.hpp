@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath>
 
 class Character
 {
@@ -20,10 +21,12 @@ public:
         sprite.setTexture(texture);
         sprite.setScale(0.8f, 0.8f);
     }
+    virtual ~Character() {
+        }
 
     virtual void update(float deltaTime)
     {
-        // Common logic for character animation
+
     }
 
     virtual void move(float dx, float dy)
@@ -75,6 +78,57 @@ public:
     }
 };
 
+class Enemy : public Character
+{
+private:
+    std::vector<sf::Texture> enemyTextures;
+    int currentFrame = 0;
+    int health;
+public:
+	Enemy(const std::vector<sf::Texture> &textures, float speed, int initialHealth) :
+			Character(textures[0], speed), enemyTextures(textures), health(initialHealth) {
+	}
+
+	void update(float deltaTime, const sf::Vector2f &playerPosition) {
+		sf::Vector2f direction = playerPosition - sprite.getPosition();
+		float length = std::sqrt(
+				direction.x * direction.x + direction.y * direction.y);
+
+		if (length != 0) {
+			direction /= length;
+		}
+
+		move(direction.x * speed * deltaTime, direction.y * speed * deltaTime);
+
+		if (direction.x > 0) {
+			currentDirection = 3;
+		} else if (direction.x < 0) {
+			currentDirection = 2;
+		}
+		isMoving = true;
+
+		if (isMoving) {
+			if (animationClock.getElapsedTime().asSeconds()
+					>= animationDuration) {
+				currentFrame = (currentFrame + 1) % enemyTextures.size();
+				sprite.setTexture(enemyTextures[currentFrame]);
+				animationClock.restart();
+			}
+		} else {
+			sprite.setTexture(enemyTextures[0]);
+		}
+
+		Character::update(deltaTime);
+	}
+	void decreaseHealth(int amount) {
+		health -= amount;
+		if (health <= 0) {
+		}
+	}
+	int getHealth() const {
+		return health;
+	}
+};
 
 class Camera
 {
