@@ -4,6 +4,50 @@
 #include <string>
 #include <cmath>
 
+class Projectile
+{
+private:
+    sf::Sprite sprite;
+    sf::Vector2f velocity;
+    float lifetime;
+    bool hasCollided;
+public:
+    Projectile(const sf::Texture& texture, const sf::Vector2f& position, const sf::Vector2f& direction, float speed, float lifetime)
+        : sprite(texture), velocity(direction * speed), lifetime(lifetime)
+    {
+        sprite.setPosition(position);
+    }
+
+    void update(float deltaTime)
+    {
+        sprite.move(velocity * deltaTime);
+
+        lifetime -= deltaTime;
+    }
+
+    bool isAlive() const
+    {
+        return lifetime > 0;
+    }
+
+    sf::Sprite& getSprite()
+    {
+        return sprite;
+    }
+
+    const sf::Sprite& getSprite() const
+        {
+            return sprite;
+        }
+    bool hasCollision() const {
+    		return hasCollided;
+    	}
+
+    	void setCollision(bool collided) {
+    		hasCollided = collided;
+    	}
+};
+
 class Character
 {
 protected:
@@ -26,7 +70,7 @@ public:
 
     virtual void update(float deltaTime)
     {
-
+        // Common logic for character animation
     }
 
     virtual void move(float dx, float dy)
@@ -56,10 +100,10 @@ class Player : public Character
 private:
     std::vector<std::vector<sf::Texture>> playerTextures;
     int currentFrame = 0;
-
+    int life;
 public:
-    Player(const std::vector<std::vector<sf::Texture>>& textures, float speed)
-        : Character(textures[0][0], speed), playerTextures(textures)
+    Player(const std::vector<std::vector<sf::Texture>>& textures, float speed, int initialLife)
+        : Character(textures[0][0], speed), playerTextures(textures), life(initialLife)
     {
         sprite.setPosition(400.0f - sprite.getGlobalBounds().width / 2.0f, 300.0f - sprite.getGlobalBounds().height / 2.0f);
     }
@@ -73,9 +117,16 @@ public:
                 currentFrame = (currentFrame + 1) % playerTextures[0].size();
                 animationClock.restart();
             }
-            sprite.setTexture(playerTextures[currentDirection][currentFrame]);
-        }
-    }
+			sprite.setTexture(playerTextures[currentDirection][currentFrame]);
+		}
+	}
+
+	int getLife() const {
+		return life;
+	}
+	void decreaseLife(int amount) {
+		life -= amount;
+	}
 };
 
 class Enemy : public Character
@@ -84,10 +135,20 @@ private:
     std::vector<sf::Texture> enemyTextures;
     int currentFrame = 0;
     int health;
+	std::vector<Projectile> projectiles;
+	sf::Clock shootTimer;
+	float shootInterval = 4.0f;
+	sf::Texture enemyProjectileTexture;
+	float projectileSpeed;
+	bool isAttacking = true;
 public:
-	Enemy(const std::vector<sf::Texture> &textures, float speed, int initialHealth) :
-			Character(textures[0], speed), enemyTextures(textures), health(initialHealth) {
-	}
+public:
+    Enemy(const std::vector<sf::Texture> &textures, float speed, int initialHealth,
+          const sf::Texture &projectileTexture, float projectileSpeed)
+        : Character(textures[0], speed), enemyTextures(textures), health(initialHealth),
+          enemyProjectileTexture(projectileTexture), projectileSpeed(projectileSpeed)
+    {
+    }
 
 	void update(float deltaTime, const sf::Vector2f &playerPosition) {
 		sf::Vector2f direction = playerPosition - sprite.getPosition();
@@ -118,6 +179,32 @@ public:
 			sprite.setTexture(enemyTextures[0]);
 		}
 
+		if (isAttacking
+				&& shootTimer.getElapsedTime().asSeconds() >= shootInterval) {
+			sf::Vector2f direction = playerPosition - sprite.getPosition();
+			float length = std::sqrt(
+					direction.x * direction.x + direction.y * direction.y);
+
+			if (length != 0) {
+				direction /= length;
+			}
+
+			projectiles.emplace_back(enemyProjectileTexture,
+					sprite.getPosition(), direction, projectileSpeed, 3.0f);
+
+			shootTimer.restart();
+		}
+
+		for (auto it = projectiles.begin(); it != projectiles.end();) {
+			it->update(deltaTime);
+
+			if (!it->isAlive()) {
+				it = projectiles.erase(it);
+			} else {
+				++it;
+			}
+		}
+
 		Character::update(deltaTime);
 	}
 	void decreaseHealth(int amount) {
@@ -128,6 +215,15 @@ public:
 	int getHealth() const {
 		return health;
 	}
+	const std::vector<Projectile>& getProjectiles() const
+	    {
+	        return projectiles;
+	    }
+	void stopAttacking()
+	    {
+	        isAttacking = false;
+	    }
+
 };
 
 class Camera

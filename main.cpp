@@ -13,7 +13,7 @@ using namespace std;
 int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 	//sf::View cameraView(sf::FloatRect(0,0,130,110));
-	int number= 0;
+	int number = 0;
 	bool fase1Unlocked = false;
 	bool fase2Unlocked = false;
 	bool fase3Unlocked = false;
@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
 	bool fase6Unlocked = false;
 //	std::cout << "digite um numero";
 //	std::cin >> number;
+	bool isAlive = true;
 
 	//hitbox superior
 	sf::RectangleShape hitbox(sf::Vector2f(1120.f, 25.f));
@@ -29,35 +30,36 @@ int main(int argc, char **argv) {
 	hitbox.setPosition(0, 55);
 	//hitbox esquerda
 	sf::RectangleShape hitbox2(sf::Vector2f(25.f, 905.f));
-		hitbox2.setFillColor(sf::Color::Transparent);
-		hitbox2.setPosition(145, 55);
+	hitbox2.setFillColor(sf::Color::Transparent);
+	hitbox2.setPosition(145, 55);
 	//hitbox direita
-		sf::RectangleShape hitbox3(sf::Vector2f(25.f, 905.f));
-		hitbox3.setFillColor(sf::Color::Transparent);
-		hitbox3.setPosition(960, 55);
+	sf::RectangleShape hitbox3(sf::Vector2f(25.f, 905.f));
+	hitbox3.setFillColor(sf::Color::Transparent);
+	hitbox3.setPosition(960, 55);
 	//hitbox inferior
-		sf::RectangleShape hitbox4(sf::Vector2f(1120.f, 25.f));
-		hitbox4.setFillColor(sf::Color::Transparent);
-		hitbox4.setPosition(0, 870);
-
+	sf::RectangleShape hitbox4(sf::Vector2f(1120.f, 25.f));
+	hitbox4.setFillColor(sf::Color::Transparent);
+	hitbox4.setPosition(0, 870);
 
 	std::vector<std::vector<sf::Texture>> playerTextures(4); // 0: Front, 1: Back, 2: Left, 3: Right
-	    std::string directions[] = { "front", "back", "left", "right" };
+	std::string directions[] = { "front", "back", "left", "right" };
 
-	    for (int dir = 0; dir < 4; ++dir)
-	    {
-	        for (int i = 0; i <= 5; ++i)
-	        {
-	            sf::Texture texture;
-	            if (!texture.loadFromFile("assets/" + directions[dir] + "/sprite_player_walking_" + directions[dir] + "_" + std::to_string(i) + ".png")) {
-	                return 1;
-	            }
-	            playerTextures[dir].push_back(texture);
-	        }
-	    }
+	for (int dir = 0; dir < 4; ++dir) {
+		for (int i = 0; i <= 5; ++i) {
+			sf::Texture texture;
+			if (!texture.loadFromFile(
+					"assets/" + directions[dir] + "/sprite_player_walking_"
+							+ directions[dir] + "_" + std::to_string(i)
+							+ ".png")) {
+				return 1;
+			}
+			playerTextures[dir].push_back(texture);
+		}
+	}
 
-	    Player player(playerTextures, 170.0f);
-	    Camera camera(window, player);
+	Player player(playerTextures, 170.0f, 100000);
+
+	Camera camera(window, player);
 
 	float playerSpeed = 170.0f;
 	sf::Clock clock1, clock2;
@@ -72,13 +74,14 @@ int main(int argc, char **argv) {
 		}
 		enemyTextures.push_back(Enemytexture);
 	}
-	//Enemy enemy(enemyTextures, 100.0f, 50);
-	Enemy* enemy = new Enemy(enemyTextures, 150.0f, 50);
-	enemy->getSprite().setPosition(200.0f, 200.0f);
+	sf::Texture enemyProjectileTexture;
+	enemyProjectileTexture.loadFromFile("assets/sprite_web_6.png");
+
+	Enemy enemy(enemyTextures, 90.0f, 50, enemyProjectileTexture, 190.0f);
+	enemy.getSprite().setPosition(200.0f, 200.0f);
 
 	//Enemy* enemy2 = new Enemy(enemyTextures, 90.0f, 50);
 	//enemy2->getSprite().setPosition(100.0f, 100.0f);
-
 
 	cout << "1" << endl;
 	tmx::Map map;
@@ -104,80 +107,89 @@ int main(int argc, char **argv) {
 				if (event.type == sf::Event::Closed)
 					window.close();
 			}
-
-
+			if (enemy.getHealth() <= 0)
+				enemy.stopAttacking();
 
 			//teste do personagem
 			float deltaTime = clock1.restart().asSeconds();
 			sf::Time Temp;
 			Temp = clock2.getElapsedTime();
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-			        {
-			            player.startMoving(2);
-			            player.move(-playerSpeed * deltaTime, 0.0f);
-			        }
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+				player.startMoving(2);
+				player.move(-playerSpeed * deltaTime, 0.0f);
+			}
 
-			        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-			        {
-			            player.startMoving(3);
-			            player.move(playerSpeed * deltaTime, 0.0f);
-			        }
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+				player.startMoving(3);
+				player.move(playerSpeed * deltaTime, 0.0f);
+			}
 
-			        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			        {
-			            player.startMoving(1);
-			            player.move(0.0f, -playerSpeed * deltaTime);
-			        }
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+				player.startMoving(1);
+				player.move(0.0f, -playerSpeed * deltaTime);
+			}
 
-			        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-			        {
-			            player.startMoving(0);
-			            player.move(0.0f, playerSpeed * deltaTime);
-			        }
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+				player.startMoving(0);
+				player.move(0.0f, playerSpeed * deltaTime);
+			}
 
-			        else
-			        {
-			            player.stopMoving();
-			        }
-			std::cout << enemy->getHealth() << endl;
-			if (enemy && sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-				enemy->decreaseHealth(10);
+			else {
+				player.stopMoving();
+			}
+			//std::cout << enemy.getHealth() << endl;
+			std::cout << player.getLife() << endl;
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+				enemy.decreaseHealth(1);
+			else {
+			}
+			std::vector<const Projectile*> collidedProjectiles;
+
+			for (const Projectile &projectile : enemy.getProjectiles()) {
+				if (projectile.getSprite().getGlobalBounds().intersects(
+						player.getSprite().getGlobalBounds())) {
+					if (std::find(collidedProjectiles.begin(),
+							collidedProjectiles.end(), &projectile)
+							== collidedProjectiles.end()) {
+
+						player.decreaseLife(10);
+
+						collidedProjectiles.push_back(&projectile);
+					}
+				}
+			}
 
 			sf::Vector2f playerPosition = player.getSprite().getPosition();
+
 			player.update(deltaTime);
 			camera.update();
 
-			enemy->update(deltaTime, playerPosition);
-			if (enemy->getHealth() <= 0) {
-				enemy = nullptr;
-				delete enemy;
+			enemy.update(deltaTime, playerPosition);
 
-			}
-
-			if(hitbox.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
+			if (hitbox.getGlobalBounds().intersects(
+					player.getSprite().getGlobalBounds())) {
 				player.getSprite().move(0, playerSpeed * deltaTime);
 			}
-			if(hitbox2.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
-				player.getSprite().move(playerSpeed * deltaTime,0);
+			if (hitbox2.getGlobalBounds().intersects(
+					player.getSprite().getGlobalBounds())) {
+				player.getSprite().move(playerSpeed * deltaTime, 0);
 			}
-			if(hitbox3.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
-				player.getSprite().move(-playerSpeed * deltaTime,0);
+			if (hitbox3.getGlobalBounds().intersects(
+					player.getSprite().getGlobalBounds())) {
+				player.getSprite().move(-playerSpeed * deltaTime, 0);
 			}
-			if(hitbox4.getGlobalBounds().intersects(player.getSprite().getGlobalBounds())){
+			if (hitbox4.getGlobalBounds().intersects(
+					player.getSprite().getGlobalBounds())) {
 				player.getSprite().move(0, -playerSpeed * deltaTime);
 			}
-
-
-			//atualizar visao do jogador
-			//cameraView.setCenter(player.getPosition());
 
 			// Verifica se 30 segundos se passaram
 			if (Temp.asSeconds() >= 10) {
 				Temp = sf::Time::Zero;
 				clock2.restart();
 				number++; // Incrementa a variável
-
 
 			}
 			if (number >= 1) {
@@ -205,32 +217,38 @@ int main(int argc, char **argv) {
 			window.draw(layerOne);
 			window.draw(layerTwo);
 
-			if(fase1Unlocked)
-			window.draw(Fase1_casinhas);
+			if (fase1Unlocked)
+				window.draw(Fase1_casinhas);
 
-			if(fase2Unlocked)
-			window.draw(Fase2_casinhas);
+			if (fase2Unlocked)
+				window.draw(Fase2_casinhas);
 
-			if(fase3Unlocked)
-			window.draw(Fase3_comercio);
+			if (fase3Unlocked)
+				window.draw(Fase3_comercio);
 
-			if(fase4Unlocked){
-			window.draw(Fase4_terraCastelo);
-			window.draw(Fase5_castelo1);
-			window.draw(Fase6_castelo2);
+			if (fase4Unlocked) {
+				window.draw(Fase4_terraCastelo);
+				window.draw(Fase5_castelo1);
+				window.draw(Fase6_castelo2);
 			}
-			if(fase5Unlocked)
-			window.draw(Fase7_decoracaoExtra);
+			if (fase5Unlocked)
+				window.draw(Fase7_decoracaoExtra);
 
-			if(fase6Unlocked)
-			window.draw(Fase8_final);
+			if (fase6Unlocked)
+				window.draw(Fase8_final);
 
 			window.draw(player.getSprite());
 			window.draw(hitbox);
 			window.draw(hitbox2);
 			window.draw(hitbox3);
 			window.draw(hitbox4);
-			window.draw(enemy->getSprite());
+			if (enemy.getHealth() > 0) {
+				window.draw(enemy.getSprite());
+			}
+			for (const auto &projectile : enemy.getProjectiles()) {
+				window.draw(projectile.getSprite());
+			}
+
 			window.display();
 		}
 
