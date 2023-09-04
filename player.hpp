@@ -20,9 +20,11 @@ public:
 
     void update(float deltaTime)
     {
-        sprite.move(velocity * deltaTime);
+    	if (!hasCollided) {
+    	        sprite.move(velocity * deltaTime);
 
-        lifetime -= deltaTime;
+    	        lifetime -= deltaTime;
+    	    }
     }
 
     bool isAlive() const
@@ -46,6 +48,13 @@ public:
     	void setCollision(bool collided) {
     		hasCollided = collided;
     	}
+protected:
+	void shoot(std::vector<Projectile> &projectiles,
+			const sf::Texture &projectileTexture,
+			const sf::Vector2f &direction) {
+		projectiles.emplace_back(projectileTexture, sprite.getPosition(),
+				direction, 500.0f, 2.0f);
+	}
 };
 
 class Character
@@ -70,7 +79,6 @@ public:
 
     virtual void update(float deltaTime)
     {
-        // Common logic for character animation
     }
 
     virtual void move(float dx, float dy)
@@ -101,9 +109,13 @@ private:
     std::vector<std::vector<sf::Texture>> playerTextures;
     int currentFrame = 0;
     int life;
+    std::vector<Projectile> projectiles;
+    sf::Texture playerProjectileTexture;
+    bool spaceKeyReleased = true;
+
 public:
-    Player(const std::vector<std::vector<sf::Texture>>& textures, float speed, int initialLife)
-        : Character(textures[0][0], speed), playerTextures(textures), life(initialLife)
+    Player(const std::vector<std::vector<sf::Texture>>& textures, float speed, int initialLife,const sf::Texture &projectileTexture)
+        : Character(textures[0][0], speed), playerTextures(textures), life(initialLife), playerProjectileTexture(projectileTexture)
     {
         sprite.setPosition(400.0f - sprite.getGlobalBounds().width / 2.0f, 300.0f - sprite.getGlobalBounds().height / 2.0f);
     }
@@ -118,8 +130,50 @@ public:
                 animationClock.restart();
             }
 			sprite.setTexture(playerTextures[currentDirection][currentFrame]);
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+				if (spaceKeyReleased) {
+
+				sf::Vector2f shootDirection;
+				switch (currentDirection) {
+				case 0: // Front
+					shootDirection = sf::Vector2f(0, 1);
+					break;
+				case 1: // Back
+					shootDirection = sf::Vector2f(0, -1);
+					break;
+				case 2: // Left
+					shootDirection = sf::Vector2f(-1, 0);
+					break;
+				case 3: // Right
+					shootDirection = sf::Vector2f(1, 0);
+					break;
+				default:
+					break;
+				}
+
+			shoot(projectiles, playerProjectileTexture);
+			spaceKeyReleased = false;
+			}
+		}else{
+			spaceKeyReleased = true;
 		}
 	}
+}
+void updateProjectiles(float deltaTime)
+{
+            for (auto it = projectiles.begin(); it != projectiles.end();)
+            {
+                it->update(deltaTime);
+                if (!it->isAlive())
+                {
+                    it = projectiles.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+        }
 
 	int getLife() const {
 		return life;
@@ -127,6 +181,37 @@ public:
 	void decreaseLife(int amount) {
 		life -= amount;
 	}
+
+	void shoot(std::vector<Projectile> &projectiles,
+			const sf::Texture &projectileTexture) {
+		if (isMoving) {
+
+			sf::Vector2f shootDirection;
+			switch (currentDirection) {
+			case 0: // Front
+				shootDirection = sf::Vector2f(0, 1);
+				break;
+			case 1: // Back
+				shootDirection = sf::Vector2f(0, -1);
+				break;
+			case 2: // Left
+				shootDirection = sf::Vector2f(-1, 0);
+				break;
+			case 3: // Right
+				shootDirection = sf::Vector2f(1, 0);
+				break;
+			default:
+				break;
+			}
+
+			projectiles.emplace_back(projectileTexture, sprite.getPosition(),
+					shootDirection, 500.0f, 2.0f);
+		}
+	}
+	const std::vector<Projectile>& getProjectiles() const {
+		return projectiles;
+	}
+
 };
 
 class Enemy : public Character
@@ -141,6 +226,8 @@ private:
 	sf::Texture enemyProjectileTexture;
 	float projectileSpeed;
 	bool isAttacking = true;
+	sf::Clock spawnTimer;
+	float spawnInterval = 5.0f;
 public:
 public:
     Enemy(const std::vector<sf::Texture> &textures, float speed, int initialHealth,
@@ -148,6 +235,8 @@ public:
         : Character(textures[0], speed), enemyTextures(textures), health(initialHealth),
           enemyProjectileTexture(projectileTexture), projectileSpeed(projectileSpeed)
     {
+    	spawnTimer.restart();
+    	spawnInterval = 5.0f + (rand() % 5);
     }
 
 	void update(float deltaTime, const sf::Vector2f &playerPosition) {
@@ -222,7 +311,17 @@ public:
 	void stopAttacking()
 	    {
 	        isAttacking = false;
-	    }
+     }
+	void spawnNewEnemy(std::vector<Enemy> &enemies,
+			const std::vector<sf::Texture> &enemyTextures, float speed,
+			int initialHealth, const sf::Texture &projectileTexture,
+			float projectileSpeed) {
+		Enemy newEnemy(enemyTextures, speed, initialHealth, projectileTexture,
+				projectileSpeed);
+		newEnemy.sprite.setPosition(100.0f, 100.0f);
+		enemies.push_back(newEnemy);
+
+	}
 
 };
 

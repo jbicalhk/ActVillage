@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 	//sf::View cameraView(sf::FloatRect(0,0,130,110));
 	int number = 0;
+	int lifePlayer = 1000000;
 	bool fase1Unlocked = false;
 	bool fase2Unlocked = false;
 	bool fase3Unlocked = false;
@@ -22,7 +23,7 @@ int main(int argc, char **argv) {
 	bool fase6Unlocked = false;
 //	std::cout << "digite um numero";
 //	std::cin >> number;
-	bool isAlive = true;
+	//bool isAlive = true;
 
 	//hitbox superior
 	sf::RectangleShape hitbox(sf::Vector2f(1120.f, 25.f));
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
 	sf::RectangleShape hitbox4(sf::Vector2f(1120.f, 25.f));
 	hitbox4.setFillColor(sf::Color::Transparent);
 	hitbox4.setPosition(0, 870);
+	bool keyReleased = true;
 
 	std::vector<std::vector<sf::Texture>> playerTextures(4); // 0: Front, 1: Back, 2: Left, 3: Right
 	std::string directions[] = { "front", "back", "left", "right" };
@@ -56,15 +58,18 @@ int main(int argc, char **argv) {
 			playerTextures[dir].push_back(texture);
 		}
 	}
+	sf::Texture playerProjectileTexture;
+		playerProjectileTexture.loadFromFile("assets/sprite_boomerang1.png");
 
-	Player player(playerTextures, 170.0f, 100000);
+	Player player(playerTextures, 170.0f, lifePlayer, playerProjectileTexture);
+	std::vector<Projectile> PlayerProjectiles;
 
 	Camera camera(window, player);
 
 	float playerSpeed = 170.0f;
 	sf::Clock clock1, clock2;
 
-	std::vector<sf::Texture> enemyTextures;
+	std::vector<sf::Texture> enemyTextures1;
 	sf::Texture Enemytexture;
 	for (int i = 0; i <= 5; ++i) {
 		sf::Texture texture;
@@ -72,18 +77,38 @@ int main(int argc, char **argv) {
 				"assets/sprite_spider_walking_" + std::to_string(i) + ".png")) {
 			return 1;
 		}
-		enemyTextures.push_back(Enemytexture);
+		enemyTextures1.push_back(Enemytexture);
 	}
-	sf::Texture enemyProjectileTexture;
-	enemyProjectileTexture.loadFromFile("assets/sprite_web_6.png");
+	sf::Texture enemyProjectileTexture1;
+	enemyProjectileTexture1.loadFromFile("assets/sprite_web_6.png");
 
-	Enemy enemy(enemyTextures, 90.0f, 50, enemyProjectileTexture, 190.0f);
-	enemy.getSprite().setPosition(200.0f, 200.0f);
+	std::vector<Enemy> enemies;
+	const std::vector<sf::Texture> enemyTextures = enemyTextures1;
+	const float speed = 90.0f;
+	const int initialHealth = 50;
+	const sf::Texture enemyProjectileTexture = enemyProjectileTexture1;
+	const float projectileSpeed = 190.0f;
+
+	const int numEnemies = 6;
+
+	for (int i = 0; i < numEnemies; ++i) {
+	    enemies.emplace_back(enemyTextures, speed, initialHealth, enemyProjectileTexture, projectileSpeed);
+	}
+
+	//Enemy enemy(enemyTextures, 90.0f, 50, enemyProjectileTexture, 190.0f);
+
+
+
+
+
+
+
+	//enemy.getSprite().setPosition(200.0f, 200.0f);
 
 	//Enemy* enemy2 = new Enemy(enemyTextures, 90.0f, 50);
 	//enemy2->getSprite().setPosition(100.0f, 100.0f);
 
-	cout << "1" << endl;
+	//cout << "1" << endl;
 	tmx::Map map;
 
 	if (map.load("assets/demo.tmx")) {
@@ -107,8 +132,10 @@ int main(int argc, char **argv) {
 				if (event.type == sf::Event::Closed)
 					window.close();
 			}
+			for (auto& enemy : enemies) {
 			if (enemy.getHealth() <= 0)
 				enemy.stopAttacking();
+			}
 
 			//teste do personagem
 			float deltaTime = clock1.restart().asSeconds();
@@ -139,35 +166,71 @@ int main(int argc, char **argv) {
 				player.stopMoving();
 			}
 			//std::cout << enemy.getHealth() << endl;
-			std::cout << player.getLife() << endl;
+			//std::cout << player.getLife() << endl;
+			if (event.key.code == sf::Keyboard::Space && keyReleased) {
+			player.shoot(PlayerProjectiles,enemyProjectileTexture);
+			keyReleased = false;
+		}
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-				enemy.decreaseHealth(1);
-			else {
+			if (event.type == sf::Event::KeyReleased) {
+				if (event.key.code == sf::Keyboard::Space) {
+					keyReleased = true;
+				}
 			}
 			std::vector<const Projectile*> collidedProjectiles;
 
-			for (const Projectile &projectile : enemy.getProjectiles()) {
-				if (projectile.getSprite().getGlobalBounds().intersects(
-						player.getSprite().getGlobalBounds())) {
-					if (std::find(collidedProjectiles.begin(),
-							collidedProjectiles.end(), &projectile)
-							== collidedProjectiles.end()) {
-
-						player.decreaseLife(10);
-
-						collidedProjectiles.push_back(&projectile);
-					}
-				}
+			for (const Enemy &enemy : enemies) {
+			    for (const Projectile &projectile : enemy.getProjectiles()) {
+			        if (projectile.getSprite().getGlobalBounds().intersects(player.getSprite().getGlobalBounds())) {
+			            if (std::find(collidedProjectiles.begin(), collidedProjectiles.end(), &projectile) == collidedProjectiles.end()) {
+			                player.decreaseLife(10);
+			                collidedProjectiles.push_back(&projectile);
+			            }
+			        }
+			    }
 			}
+
+			std::vector<const Projectile*> collidedProjectilesPlayer;
+
+			for (const Projectile &projectilePlayer : player.getProjectiles()) {
+			    for (Enemy &enemy : enemies) {
+			        if (projectilePlayer.getSprite().getGlobalBounds().intersects(enemy.getSprite().getGlobalBounds())) {
+			            if (std::find(collidedProjectilesPlayer.begin(),
+			                collidedProjectilesPlayer.end(),
+			                &projectilePlayer)
+			                == collidedProjectilesPlayer.end()) {
+			                enemy.decreaseHealth(50);
+			                collidedProjectilesPlayer.push_back(&projectilePlayer);
+
+			                std::cout << "Enemy health after collision: " << enemy.getHealth() << std::endl;
+			            }
+			        }
+			    }
+			}
+
+
+
+			for (auto it = enemies.begin(); it != enemies.end();) {
+						    if (it->getHealth() == 0) {
+						        it = enemies.erase(it); // Remove o inimigo do vetor
+						    } else {
+						        ++it;
+						    }
+						}
 
 			sf::Vector2f playerPosition = player.getSprite().getPosition();
 
 			player.update(deltaTime);
 			camera.update();
+			player.updateProjectiles(deltaTime);
+			std::cout<<number<< endl;
 
-			enemy.update(deltaTime, playerPosition);
+			for (auto& enemy : enemies) {
+			        enemy.update(deltaTime, playerPosition);
 
+			if (enemy.getHealth() == 0)
+				number++;
+			}
 			if (hitbox.getGlobalBounds().intersects(
 					player.getSprite().getGlobalBounds())) {
 				player.getSprite().move(0, playerSpeed * deltaTime);
@@ -185,13 +248,7 @@ int main(int argc, char **argv) {
 				player.getSprite().move(0, -playerSpeed * deltaTime);
 			}
 
-			// Verifica se 30 segundos se passaram
-			if (Temp.asSeconds() >= 10) {
-				Temp = sf::Time::Zero;
-				clock2.restart();
-				number++; // Incrementa a variável
 
-			}
 			if (number >= 1) {
 				fase1Unlocked = true;
 			}
@@ -242,13 +299,20 @@ int main(int argc, char **argv) {
 			window.draw(hitbox2);
 			window.draw(hitbox3);
 			window.draw(hitbox4);
+			for (auto& enemy : enemies) {
 			if (enemy.getHealth() > 0) {
 				window.draw(enemy.getSprite());
+				}
 			}
+			for (auto& enemy : enemies) {
 			for (const auto &projectile : enemy.getProjectiles()) {
 				window.draw(projectile.getSprite());
 			}
-
+			}
+			for (const auto& projectilee : player.getProjectiles())
+			        {
+			            window.draw(projectilee.getSprite());
+			        }
 			window.display();
 		}
 
