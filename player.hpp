@@ -312,17 +312,10 @@ public:
 	    {
 	        isAttacking = false;
      }
-	void spawnNewEnemy(std::vector<Enemy> &enemies,
-			const std::vector<sf::Texture> &enemyTextures, float speed,
-			int initialHealth, const sf::Texture &projectileTexture,
-			float projectileSpeed) {
-		Enemy newEnemy(enemyTextures, speed, initialHealth, projectileTexture,
-				projectileSpeed);
-		newEnemy.sprite.setPosition(100.0f, 100.0f);
-		enemies.push_back(newEnemy);
 
-	}
-
+	void setEnemyPosition(float x, float y) {
+	        sprite.setPosition(x, y);
+	    }
 };
 
 class Camera

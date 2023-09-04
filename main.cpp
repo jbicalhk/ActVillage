@@ -5,11 +5,25 @@
 #include <tmxlite/Map.hpp>
 #include "player.hpp"
 #include <tmxlite/Object.hpp>
+#include <random>
 
 using namespace std;
 
 #include "SFMLOrthogonalLayer.hpp"
 
+void spawnNewEnemy(std::vector<Enemy> &enemies,
+			const std::vector<sf::Texture> &enemyTextures, float speed,
+			int initialHealth, const sf::Texture &projectileTexture,
+			float projectileSpeed) {
+		Enemy newEnemy(enemyTextures, speed, initialHealth, projectileTexture,
+				projectileSpeed);
+		float x = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 800.0f;
+		float y = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 800.0f;
+
+		    newEnemy.setEnemyPosition(x, y);
+
+		enemies.push_back(newEnemy);
+	}
 int main(int argc, char **argv) {
 	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
 	//sf::View cameraView(sf::FloatRect(0,0,130,110));
@@ -21,10 +35,12 @@ int main(int argc, char **argv) {
 	bool fase4Unlocked = false;
 	bool fase5Unlocked = false;
 	bool fase6Unlocked = false;
+	int maxSpawns = 3;
 //	std::cout << "digite um numero";
 //	std::cin >> number;
 	//bool isAlive = true;
-
+	sf::Clock spawnTimer;
+	float spawnInterval = 5.0f;
 	//hitbox superior
 	sf::RectangleShape hitbox(sf::Vector2f(1120.f, 25.f));
 	hitbox.setFillColor(sf::Color::Transparent);
@@ -89,11 +105,7 @@ int main(int argc, char **argv) {
 	const sf::Texture enemyProjectileTexture = enemyProjectileTexture1;
 	const float projectileSpeed = 190.0f;
 
-	const int numEnemies = 6;
-
-	for (int i = 0; i < numEnemies; ++i) {
 	    enemies.emplace_back(enemyTextures, speed, initialHealth, enemyProjectileTexture, projectileSpeed);
-	}
 
 	//Enemy enemy(enemyTextures, 90.0f, 50, enemyProjectileTexture, 190.0f);
 
@@ -136,7 +148,11 @@ int main(int argc, char **argv) {
 			if (enemy.getHealth() <= 0)
 				enemy.stopAttacking();
 			}
+			if (spawnTimer.getElapsedTime().asSeconds() >= spawnInterval && enemies.size() < maxSpawns && number  < 18) {
+					 spawnNewEnemy(enemies, enemyTextures1, 90, 50, enemyProjectileTexture, 190);
+					 spawnTimer.restart();
 
+				 }
 			//teste do personagem
 			float deltaTime = clock1.restart().asSeconds();
 			sf::Time Temp;
@@ -202,7 +218,6 @@ int main(int argc, char **argv) {
 			                enemy.decreaseHealth(50);
 			                collidedProjectilesPlayer.push_back(&projectilePlayer);
 
-			                std::cout << "Enemy health after collision: " << enemy.getHealth() << std::endl;
 			            }
 			        }
 			    }
@@ -212,7 +227,8 @@ int main(int argc, char **argv) {
 
 			for (auto it = enemies.begin(); it != enemies.end();) {
 						    if (it->getHealth() == 0) {
-						        it = enemies.erase(it); // Remove o inimigo do vetor
+						    	number++;
+						    	it = enemies.erase(it); // Remove o inimigo do vetor
 						    } else {
 						        ++it;
 						    }
@@ -227,9 +243,6 @@ int main(int argc, char **argv) {
 
 			for (auto& enemy : enemies) {
 			        enemy.update(deltaTime, playerPosition);
-
-			if (enemy.getHealth() == 0)
-				number++;
 			}
 			if (hitbox.getGlobalBounds().intersects(
 					player.getSprite().getGlobalBounds())) {
@@ -249,22 +262,22 @@ int main(int argc, char **argv) {
 			}
 
 
-			if (number >= 1) {
+			if (number >= 3) {
 				fase1Unlocked = true;
 			}
-			if (number >= 2) {
+			if (number >= 6) {
 				fase2Unlocked = true;
 			}
-			if (number >= 3) {
+			if (number >= 9) {
 				fase3Unlocked = true;
 			}
-			if (number >= 4) {
+			if (number >= 12) {
 				fase4Unlocked = true;
 			}
-			if (number >= 5) {
+			if (number >= 15) {
 				fase5Unlocked = true;
 			}
-			if (number >= 6) {
+			if (number >= 18) {
 				fase6Unlocked = true;
 			}
 
